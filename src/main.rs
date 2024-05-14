@@ -60,7 +60,7 @@ impl eframe::App for MyApp {
                         ui.vertical(|ui| {
                             ui.horizontal(|ui| {
                                 if ui
-                                    .button("X")
+                                    .button("⊗")
                                     .on_hover_text("Remove this function")
                                     .clicked()
                                 {
@@ -75,12 +75,26 @@ impl eframe::App for MyApp {
                                 // rename if clicked and typed
                                 //ui.text_edit_singleline(&mut element.name);
                             });
-                            ui.add(
-                                egui::DragValue::new(&mut element.a)
-                                    .speed(0.1)
-                                    .clamp_range(0.0..=10.0)
-                                    .prefix("a: "),
-                            );
+                            // get id
+                            let id = ui.make_persistent_id(i);
+                            egui::CollapsingHeader::new("Parameters").id_source(id).show(ui, |ui| {
+                                // ui.push_id("a", |ui| {
+                                    ui.add(
+                                        egui::DragValue::new(&mut element.a)
+                                            .speed(0.1)
+                                            .clamp_range(0.0..=10.0)
+                                            .prefix("a: "),
+                                    );
+                                // });
+                                // ui.add(
+                                //     egui::DragValue::new(&mut element.a)
+                                //         .speed(0.1)
+                                //         .clamp_range(0.0..=10.0)
+                                //         .prefix("a: "),
+                                // );
+    
+                            });
+                            
                             // add some space between elements
                             ui.add_space(10.0);
                         })
@@ -99,7 +113,7 @@ impl eframe::App for MyApp {
 
                 ui.horizontal(|ui| {
                     if ui
-                        .button("+")
+                        .button("➕")
                         .on_hover_text("Add a new function to the plot")
                         .clicked()
                     {
