@@ -21,7 +21,6 @@ enum Elements {
     Function,
     Parameter,
     List,
-
 }
 
 struct MyApp {
@@ -39,7 +38,7 @@ impl Default for MyApp {
                     a: 5.0,
                 },
                 Element {
-                    name: "function 2".to_owned(),
+                    name: "Function 2".to_owned(),
                     a: 6.0,
                 },
             ],
@@ -54,43 +53,44 @@ impl eframe::App for MyApp {
             ui.vertical(|ui| {
                 let mut id_to_remove = None;
                 for (i, element) in self.elements.iter_mut().enumerate() {
-                    // let frame = egui::Frame::default()
-                    //     .fill(egui::Color32::from_rgb(200, 200, 255)) // Light blue background
-                    //     .stroke(egui::Stroke::new(2.0, egui::Color32::BLACK)); // Black border
-                    // frame.show(ui, |ui| {
-                    //     ui.label(format!("Element {}", i));
-                    // }
-                    ui.horizontal(|ui| {
-                        if ui
-                            .button("X")
-                            .on_hover_text("Remove this function")
-                            .clicked()
-                        {
-                            id_to_remove = Some(i);
-                        }
-                        
-                        //ui.label(element.name.clone());
-                        ui.add(egui::TextEdit::singleline(&mut element.name).desired_width(70.0));
-                        // rename if clicked and typed
-                        //ui.text_edit_singleline(&mut element.name);
-                        
+                    let frame = egui::Frame::default()
+                        .inner_margin(4.0)
+                        .stroke(egui::Stroke::new(1.0, egui::Color32::GRAY)); // Black border
+                    frame.show(ui, |ui: &mut egui::Ui| {
+                        ui.vertical(|ui| {
+                            ui.horizontal(|ui| {
+                                if ui
+                                    .button("X")
+                                    .on_hover_text("Remove this function")
+                                    .clicked()
+                                {
+                                    id_to_remove = Some(i);
+                                }
 
-
+                                //ui.label(element.name.clone());
+                                ui.add(
+                                    egui::TextEdit::singleline(&mut element.name)
+                                        .desired_width(70.0),
+                                );
+                                // rename if clicked and typed
+                                //ui.text_edit_singleline(&mut element.name);
+                            });
+                            ui.add(
+                                egui::DragValue::new(&mut element.a)
+                                    .speed(0.1)
+                                    .clamp_range(0.0..=10.0)
+                                    .prefix("a: "),
+                            );
+                            // add some space between elements
+                            ui.add_space(10.0);
+                        })
                     });
+
                     // ui.add(
                     //     egui::Slider::new(&mut element.a, 0.0..=10.0)
                     //         .step_by(0.001)
                     //         .text("a"),
                     // );
-                    ui.add(
-                        egui::DragValue::new(&mut element.a)
-                            .speed(0.1)
-                            .clamp_range(0.0..=10.0)
-                            .prefix("a: "),
-                    );
-                    // add some space between elements
-                    ui.add_space(10.0);
-                    
                 }
                 // remove id_to_remove from elements
                 if let Some(index) = id_to_remove {
@@ -109,17 +109,12 @@ impl eframe::App for MyApp {
                         });
                         self.new_function_name = "".to_owned();
                     };
-                    let label = ui.label("New function: ");
+                    let label = ui.label("f(x): ");
                     ui.text_edit_singleline(&mut self.new_function_name)
                         .labelled_by(label.id);
-                   
-
                 });
-                
             });
-            
         });
-
 
         egui::CentralPanel::default().show(ctx, |ui| {
             let plot = Plot::new("custom_axes")
