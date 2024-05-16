@@ -13,6 +13,21 @@ fn main() -> Result<(), eframe::Error> {
     };
     eframe::run_native("Plotting", options, Box::new(|cc| Box::<MyApp>::default()))
 }
+struct Function {
+    name: String,
+    expression: String,
+    parsed_expression: Expr,
+    vars_names: Vec<char>,
+    vars_values: Vec<f64>
+}
+impl Function {
+    pub fn new(expression: String, name: String) {
+        let parsed_expression: Expr = expression.parse().expect("Could not parse the expression");
+        
+
+    }
+}
+
 struct Element {
     name: String,
     //type_: Elements,
