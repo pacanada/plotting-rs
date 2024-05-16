@@ -6,6 +6,117 @@ use egui::{Color32, Stroke};
 use egui_plot::{Legend, Line, Plot, PlotPoints};
 use meval::{Expr, Context};
 
+use meval::tokenizer::Token;
+
+
+#[derive(Debug, Clone)]
+struct Function {
+    name: String,
+    expression: String,
+    parsed_expression: Expr,
+    vars_names: Vec<String>,
+    vars_values: Vec<f64>, //bind_expression:
+}
+impl Function {
+    pub fn new(expression: String, name: String) -> Self {
+        let parsed_expression: Expr = expression.parse().expect("Could not parse the expression");
+        let (vars_names, vars_values) = Self::extract_vars(&parsed_expression);
+        Self {
+            name,
+            expression,
+            parsed_expression,
+            vars_names,
+            vars_values,
+        }
+    }
+    pub fn assign_value_to_var(&mut self, var_name: String, value: f64) {
+        let index = self.vars_names.iter().position(|x| x == &var_name);
+        match index {
+            Some(i) => self.vars_values[i] = value,
+            None => println!("Variable not found"),
+        }
+    }
+    pub fn eval(&mut self, x: f64) -> f64 {
+        // if it is slow, look at mapping only one var x like in the example
+        // Apparently the library uses bind2, bind3, depending on the number of variables, investigate bindn
+        let parsed_expression = self.parsed_expression.clone();
+        match self.vars_names.len() {
+            0 => {
+                let f = parsed_expression.bind("x").unwrap();
+                return f(x);
+            }
+            1 => {
+                let f = parsed_expression
+                    .bind2("x", &self.vars_names[0])
+                    .unwrap();
+                return f(x, self.vars_values[0]);
+            }
+            2 => {
+                let f = 
+                    parsed_expression
+                    .bind3("x", &self.vars_names[0], &self.vars_names[1])
+                    .unwrap();
+                return f(x, self.vars_values[0], self.vars_values[1]);
+            }
+            3 => {
+                let f = parsed_expression
+                    .bind4(
+                        "x",
+                        &self.vars_names[0],
+                        &self.vars_names[1],
+                        &self.vars_names[2],
+                    )
+                    .unwrap();
+                return f(
+                    x,
+                    self.vars_values[0],
+                    self.vars_values[1],
+                    self.vars_values[2],
+                );
+            }
+            4 => {
+                let f = parsed_expression
+                    .bind5(
+                        "x",
+                        &self.vars_names[0],
+                        &self.vars_names[1],
+                        &self.vars_names[2],
+                        &self.vars_names[3],
+                    )
+                    .unwrap();
+                return f(
+                    x,
+                    self.vars_values[0],
+                    self.vars_values[1],
+                    self.vars_values[2],
+                    self.vars_values[3],
+                );
+            }
+            _ => panic!("Too many number of parameters, maximum supported is 4 + x"),
+        }
+    }
+    pub fn extract_vars(parsed_expression: &Expr) -> (Vec<String>, Vec<f64>) {
+        let vars = parsed_expression.to_vec();
+        // keep only the names of Token::Var
+        let mut vars_names: Vec<String> = vars
+            .iter()
+            .filter_map(|x| match x {
+                Token::Var(name) => Some(name.to_string()),
+                _ => None,
+            })
+            .collect();
+        if !vars_names.contains(&"x".to_owned()) {
+            println!("It cannot plot anything without an x var")
+        }
+        vars_names.retain(|element| element != "x");
+        vars_names.sort();
+        vars_names.dedup();
+        // default var values to 1.0
+        let vars_values: Vec<f64> = vars_names.iter().map(|_| 1.0).collect();
+        return (vars_names, vars_values);
+    }
+}
+
 fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default().with_inner_size([1000.0, 1000.0]),
@@ -13,41 +124,10 @@ fn main() -> Result<(), eframe::Error> {
     };
     eframe::run_native("Plotting", options, Box::new(|cc| Box::<MyApp>::default()))
 }
-struct Function {
-    name: String,
-    expression: String,
-    parsed_expression: Expr,
-    vars_names: Vec<char>,
-    vars_values: Vec<f64>
-}
-impl Function {
-    pub fn new(expression: String, name: String) {
-        let parsed_expression: Expr = expression.parse().expect("Could not parse the expression");
-        
-
-    }
-}
-
-struct Element {
-    name: String,
-    //type_: Elements,
-    a: f64,
-}
-impl Element {
-    pub fn get_expr(text: String)->Expr{
-        let expr: Expr = text.parse().unwrap();
-        expr
-    }
-}
-enum Elements {
-    Function,
-    Parameter,
-    List,
-}
 
 struct MyApp {
     new_function_name: String,
-    elements: Vec<Element>,
+    elements: Vec<Function>,
 }
 
 impl Default for MyApp {
@@ -55,14 +135,10 @@ impl Default for MyApp {
         Self {
             new_function_name: "".to_owned(),
             elements: vec![
-                Element {
-                    name: "a*x+1".to_owned(),
-                    a: 5.0,
-                },
-                Element {
-                    name: "a^2+1".to_owned(),
-                    a: 6.0,
-                },
+                Function::new("x^2+a".to_owned(), "x^2+a".to_owned()),
+                Function::new("x^a+c^4".to_owned(), "x^a+c*4".to_owned()),
+                Function::new("sin(x)*sin(x)*a+b*cos(x)".to_owned(), "sin(x)*sin(x)*a+b*cos(x)".to_owned()),
+
             ],
         }
     }
@@ -89,7 +165,6 @@ impl eframe::App for MyApp {
                                     id_to_remove = Some(i);
                                 }
 
-                                //ui.label(element.name.clone());
                                 ui.add(
                                     egui::TextEdit::singleline(&mut element.name)
                                         .desired_width(70.0),
@@ -101,12 +176,15 @@ impl eframe::App for MyApp {
                             let id = ui.make_persistent_id(i);
                             egui::CollapsingHeader::new("Parameters").id_source(id).show(ui, |ui| {
                                 // ui.push_id("a", |ui| {
-                                    ui.add(
-                                        egui::DragValue::new(&mut element.a)
-                                            .speed(0.1)
-                                            .clamp_range(0.0..=10.0)
-                                            .prefix("a: "),
-                                    );
+                                    for (i, name) in element.vars_names.iter().enumerate() {
+                                        ui.add(
+                                            egui::DragValue::new(&mut element.vars_values[i])
+                                                .speed(0.1)
+                                                .clamp_range(-10.0..=10.0)
+                                                .prefix(format!("{}: ", name)),
+                                        );
+                                    }
+
     
                             });
                             
@@ -127,10 +205,11 @@ impl eframe::App for MyApp {
                         .on_hover_text("Add a new function to the plot")
                         .clicked()
                     {
-                        self.elements.push(Element {
-                            name: self.new_function_name.to_owned(),
-                            a: 0.0,
-                        });
+                        self.elements.push(
+                            Function::new(self.new_function_name.to_owned(),
+                            self.new_function_name.to_owned(),
+                        )
+                        );
                         self.new_function_name = "".to_owned();
                     };
                     let label = ui.label("f(x): ");
@@ -151,39 +230,18 @@ impl eframe::App for MyApp {
                     plot_ui.line(
                         Line::new(PlotPoints::from_parametric_callback(
                             |t| {
-                                let expr = Element::get_expr(element.name.clone());
-                                let f = expr.bind2("a", "x").expect("error binding");
+                                //let expr = fun);
+                                // let f = element.assign_value_to_var("a", );
                                 let x = t;
-                                let y = f(element.a, t);
+                                let y = element.clone().eval(x);
                                 (x, y)
                             },
-                            0.0..=1.0,
-                            1000,
+                            -10.0..=10.0,
+                            500,
                         ))
                         .name(&element.name),
                     );
                 }
-                // plot_ui.line(Line::new(PlotPoints::from_parametric_callback(
-                //     |t| {
-                //         let x = t;
-                //         let y = t.powi(self.a as i32);
-                //         (x, y)
-                //     },
-                //     0.0..=1.0,
-                //     1000,
-                // )));
-                // plot_ui.line(Line::new(PlotPoints::from_explicit_callback(
-                //     |x| x.powf(-1.0),
-                //     0.0..=1.0,
-                //     1000,
-                // )));
-                // plot_ui.line(
-                //     Line::new(PlotPoints::from_ys_f32(&vec![1.0, 2.0, 3.0, 2.0, 1.5]))
-                //         .color(Color32::RED)
-                //         .stroke(Stroke::new(2.0, Color32::RED))
-                //         .name("Explicit"),
-
-                // );
             })
             .response
         });
