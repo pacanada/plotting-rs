@@ -36,7 +36,7 @@ impl Function {
             None => println!("Variable not found"),
         }
     }
-    pub fn eval(&mut self, x: f64) -> f64 {
+    pub fn eval(&self, x: f64) -> f64 {
         // if it is slow, look at mapping only one var x like in the example
         // Apparently the library uses bind2, bind3, depending on the number of variables, investigate bindn
         let parsed_expression = self.parsed_expression.clone();
@@ -226,14 +226,14 @@ impl eframe::App for MyApp {
 
             // Show the plot with lines
             plot.show(ui, |plot_ui| {
-                for element in &self.elements {
+                for element in  &self.elements {
                     plot_ui.line(
                         Line::new(PlotPoints::from_parametric_callback(
                             |t| {
                                 //let expr = fun);
                                 // let f = element.assign_value_to_var("a", );
                                 let x = t;
-                                let y = element.clone().eval(x);
+                                let y = element.eval(t);
                                 (x, y)
                             },
                             -10.0..=10.0,
