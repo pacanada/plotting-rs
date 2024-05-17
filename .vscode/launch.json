@@ -1,0 +1,175 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'cas'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=plotting-rs"
+                ],
+                "filter": {
+                    "name": "cas",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'plotting-rs'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=plotting-rs",
+                    "--package=plotting-rs"
+                ],
+                "filter": {
+                    "name": "plotting-rs",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'plotting-rs'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=plotting-rs",
+                    "--package=plotting-rs"
+                ],
+                "filter": {
+                    "name": "plotting-rs",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'plotting'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=plotting",
+                    "--package=plotting-rs"
+                ],
+                "filter": {
+                    "name": "plotting",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'plotting'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=plotting",
+                    "--package=plotting-rs"
+                ],
+                "filter": {
+                    "name": "plotting",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'plotting_v2'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=plotting_v2",
+                    "--package=plotting-rs"
+                ],
+                "filter": {
+                    "name": "plotting_v2",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'plotting_v2'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=plotting_v2",
+                    "--package=plotting-rs"
+                ],
+                "filter": {
+                    "name": "plotting_v2",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'meval_example'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=meval_example",
+                    "--package=plotting-rs"
+                ],
+                "filter": {
+                    "name": "meval_example",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'meval_example'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=meval_example",
+                    "--package=plotting-rs"
+                ],
+                "filter": {
+                    "name": "meval_example",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

@@ -2,12 +2,11 @@
 #![allow(rustdoc::missing_crate_level_docs)] // it's an example
 
 use eframe::egui;
-use egui::{Color32, Stroke};
+use egui::{Color32, Stroke, Vec2b};
 use egui_plot::{Legend, Line, Plot, PlotPoints};
-use meval::{Expr, Context};
+use meval::{Context, Expr};
 
 use meval::tokenizer::Token;
-
 
 #[derive(Debug, Clone)]
 struct Function {
@@ -46,14 +45,11 @@ impl Function {
                 return f(x);
             }
             1 => {
-                let f = parsed_expression
-                    .bind2("x", &self.vars_names[0])
-                    .unwrap();
+                let f = parsed_expression.bind2("x", &self.vars_names[0]).unwrap();
                 return f(x, self.vars_values[0]);
             }
             2 => {
-                let f = 
-                    parsed_expression
+                let f = parsed_expression
                     .bind3("x", &self.vars_names[0], &self.vars_names[1])
                     .unwrap();
                 return f(x, self.vars_values[0], self.vars_values[1]);
@@ -127,20 +123,60 @@ fn main() -> Result<(), eframe::Error> {
 
 struct MyApp {
     new_function_name: String,
-    elements: Vec<Function>,
+    functions: Vec<Function>,
+    parameters_names: Vec<String>,
+    parameters_values: Vec<f64>,
+    xlim: (f64, f64),
+    ylim: (f64, f64)
+}
+impl MyApp {
+    pub fn update_parameters_names_from_functions(&mut self) {
+        // let mut parameters_names: Vec<String> = vec![];
+        // let mut parameters_values: Vec<f64> = vec![];
+        // if additive {
+        //     parameters_names = self.parameters_names;
+        //     parameters_values = self.parameters_values;
+        // }
+        let mut parameters_names = self.parameters_names.clone();
+        let mut parameters_values = self.parameters_values.clone();
+
+        for function in &self.functions {
+            let (function_parameter_names, function_parameter_values) =
+                Function::extract_vars(&function.parsed_expression);
+            parameters_names.append(&mut function_parameter_names.clone());
+            parameters_values.append(&mut function_parameter_values.clone());
+        }
+        parameters_names.sort();
+        parameters_names.dedup();
+        // TODO: how to get rid of duplicates names without removing duplicated values
+        //parameters_values.sort();
+        //parameters_names.dedup();
+
+        self.parameters_names = parameters_names;
+        self.parameters_values = parameters_values;
+    }
+    pub fn add_new_function(&mut self, new_function: Function) {
+        self.functions.push(new_function);
+        self.update_parameters_names_from_functions()
+    }
 }
 
 impl Default for MyApp {
     fn default() -> Self {
-        Self {
+        let f1 = Function::new("x^2+a".to_owned(), "x^2+a".to_owned());
+        let f2 = Function::new("x^a+c^4".to_owned(), "x^a+c*4".to_owned());
+        // let parameters_names = Self::get_parameters_names_from_functions(functions)
+        let mut out = Self {
             new_function_name: "".to_owned(),
-            elements: vec![
-                Function::new("x^2+a".to_owned(), "x^2+a".to_owned()),
-                Function::new("x^a+c^4".to_owned(), "x^a+c*4".to_owned()),
-                Function::new("sin(x)*sin(x)*a+b*cos(x)".to_owned(), "sin(x)*sin(x)*a+b*cos(x)".to_owned()),
-
-            ],
-        }
+            xlim: (-10.0,10.0),
+            ylim: (-10.0,10.0),
+            functions: vec![f1, f2],
+            parameters_names: vec![],
+            parameters_values: vec![], //Function::new("sin(x)*sin(x)*a+b*cos(x)".to_owned(), "sin(x)*sin(x)*a+b*cos(x)".to_owned()),
+                                       // parameters_names:  Self::get_parameters_names_from_functions(vec![&f1.clone(),&f2.clone()])
+        };
+        out.update_parameters_names_from_functions();
+        out
     }
 }
 
@@ -150,7 +186,7 @@ impl eframe::App for MyApp {
             ui.heading("Elements");
             ui.vertical(|ui| {
                 let mut id_to_remove = None;
-                for (i, element) in self.elements.iter_mut().enumerate() {
+                for (i, function) in self.functions.iter_mut().enumerate() {
                     let frame = egui::Frame::default()
                         .inner_margin(4.0)
                         .stroke(egui::Stroke::new(1.0, egui::Color32::GRAY)); // Black border
@@ -166,7 +202,7 @@ impl eframe::App for MyApp {
                                 }
 
                                 ui.add(
-                                    egui::TextEdit::singleline(&mut element.name)
+                                    egui::TextEdit::singleline(&mut function.name)
                                         .desired_width(70.0),
                                 );
                                 // rename if clicked and typed
@@ -174,29 +210,49 @@ impl eframe::App for MyApp {
                             });
                             // get id
                             let id = ui.make_persistent_id(i);
-                            egui::CollapsingHeader::new("Parameters").id_source(id).show(ui, |ui| {
-                                // ui.push_id("a", |ui| {
-                                    for (i, name) in element.vars_names.iter().enumerate() {
+                            egui::CollapsingHeader::new("Parameters")
+                                .id_source(id)
+                                .show(ui, |ui| {
+                                    // ui.push_id("a", |ui| {
+                                    for (i, name) in function.vars_names.iter().enumerate() {
                                         ui.add(
-                                            egui::DragValue::new(&mut element.vars_values[i])
+                                            egui::DragValue::new(&mut function.vars_values[i])
                                                 .speed(0.1)
                                                 .clamp_range(-10.0..=10.0)
                                                 .prefix(format!("{}: ", name)),
                                         );
+                                        //TODO:  should we this update the app vars?
                                     }
+                                });
 
-    
-                            });
-                            
                             // add some space between elements
                             ui.add_space(10.0);
                         })
                     });
-
                 }
+                //let idx = 0;
+                for (i, param_name) in self.parameters_names.iter().enumerate() {
+                    // let mut_values = &mut self.parameters_values.unwrap();
+                    ui.add(
+                        egui::DragValue::new(&mut self.parameters_values[i])
+                            .speed(0.1)
+                            .clamp_range(-10.0..=10.0)
+                            .prefix(format!("{}: ", param_name)),
+                    );
+                    // for all the functions, modify the var name values
+                    for function in self.functions.iter_mut() {
+                        if function.vars_names.contains(param_name) {
+                            function.assign_value_to_var(
+                                param_name.to_owned(),
+                                self.parameters_values[i],
+                            )
+                        }
+                    }
+                }
+
                 // remove id_to_remove from elements
                 if let Some(index) = id_to_remove {
-                    self.elements.remove(index);
+                    self.functions.remove(index);
                 }
 
                 ui.horizontal(|ui| {
@@ -205,11 +261,10 @@ impl eframe::App for MyApp {
                         .on_hover_text("Add a new function to the plot")
                         .clicked()
                     {
-                        self.elements.push(
-                            Function::new(self.new_function_name.to_owned(),
+                        self.add_new_function(Function::new(
                             self.new_function_name.to_owned(),
-                        )
-                        );
+                            self.new_function_name.to_owned(),
+                        ));
                         self.new_function_name = "".to_owned();
                     };
                     let label = ui.label("f(x): ");
@@ -224,24 +279,44 @@ impl eframe::App for MyApp {
                 .legend(Legend::default())
                 .show_axes(true);
 
+            //plot.show_axes(show)
+            // let x0 = plot.coordinates_pos
             // Show the plot with lines
             plot.show(ui, |plot_ui| {
-                for element in  &self.elements {
+                let plot_bounds = plot_ui.plot_bounds();
+                // self.xlim.0 = plot_bounds.min()[0];
+                // self.xlim.1= plot_bounds.max()[0];
+                let plot_bounds = plot_ui.plot_bounds();
+                println!("{:?}", plot_bounds);
+                //let p1 = plot_ui.pl
+                for function in &self.functions {
                     plot_ui.line(
                         Line::new(PlotPoints::from_parametric_callback(
                             |t| {
                                 //let expr = fun);
                                 // let f = element.assign_value_to_var("a", );
                                 let x = t;
-                                let y = element.eval(t);
+                                let y = function.eval(t);
                                 (x, y)
                             },
-                            -10.0..=10.0,
+                            self.xlim.0..=self.xlim.1,
                             500,
                         ))
-                        .name(&element.name),
+                        .name(&function.name),
                     );
+                    //     Line::new(PlotPoints::from_explicit_callback(
+                    //         move |x| function.eval(x),
+                    //         ..,
+                    //         500,
+                    //     ))
+                    //     .name(&function.name),
+                    // );
                 }
+
+
+                //self.ylim.0 = plot_bounds.min()[1];
+                //self.ylim.1=plot_bounds.max()[1];
+                //println!("{:?}", plot_bounds);
             })
             .response
         });
@@ -251,4 +326,3 @@ impl eframe::App for MyApp {
         // });
     }
 }
-
