@@ -8,6 +8,9 @@ use meval::{Context, Expr};
 
 use meval::tokenizer::Token;
 
+const DEFAULT_VALUE_PARAMETER: f64 = 1.0;
+const DEFAULT_PARAMETERS_LIMIT: (f64, f64) = (-10.0, 10.0);
+
 #[derive(Debug, Clone)]
 struct Function {
     name: String,
@@ -108,10 +111,12 @@ impl Function {
         vars_names.sort();
         vars_names.dedup();
         // default var values to 1.0
-        let vars_values: Vec<f64> = vars_names.iter().map(|_| 1.0).collect();
+        let vars_values: Vec<f64> = vars_names.iter().map(|_| DEFAULT_VALUE_PARAMETER).collect();
         return (vars_names, vars_values);
     }
 }
+
+
 
 fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {
@@ -123,11 +128,13 @@ fn main() -> Result<(), eframe::Error> {
 
 struct MyApp {
     new_function_name: String,
+    new_parameter_name: String,
     functions: Vec<Function>,
     parameters_names: Vec<String>,
     parameters_values: Vec<f64>,
+    parameters_lim: Vec<(f64,f64)>,
     xlim: (f64, f64),
-    ylim: (f64, f64)
+    //ylim: (f64, f64)
 }
 impl MyApp {
     pub fn update_parameters_names_from_functions(&mut self) {
@@ -139,12 +146,14 @@ impl MyApp {
         // }
         let mut parameters_names = self.parameters_names.clone();
         let mut parameters_values = self.parameters_values.clone();
+        let mut parameters_lim = self.parameters_lim.clone();
 
         for function in &self.functions {
             let (function_parameter_names, function_parameter_values) =
                 Function::extract_vars(&function.parsed_expression);
             parameters_names.append(&mut function_parameter_names.clone());
             parameters_values.append(&mut function_parameter_values.clone());
+            parameters_lim.push(DEFAULT_PARAMETERS_LIMIT);
         }
         parameters_names.sort();
         parameters_names.dedup();
@@ -154,6 +163,7 @@ impl MyApp {
 
         self.parameters_names = parameters_names;
         self.parameters_values = parameters_values;
+        self.parameters_lim = parameters_lim;
     }
     pub fn add_new_function(&mut self, new_function: Function) {
         self.functions.push(new_function);
@@ -163,16 +173,19 @@ impl MyApp {
 
 impl Default for MyApp {
     fn default() -> Self {
-        let f1 = Function::new("x^2+a".to_owned(), "x^2+a".to_owned());
-        let f2 = Function::new("x^a+c^4".to_owned(), "x^a+c*4".to_owned());
+        let f1 = Function::new("x^2+0.1*a".to_owned(), "x^2+0.1*a".to_owned());
+        let f2 = Function::new("x^a/c^4".to_owned(), "x^a/c^4".to_owned());
         // let parameters_names = Self::get_parameters_names_from_functions(functions)
         let mut out = Self {
             new_function_name: "".to_owned(),
-            xlim: (-10.0,10.0),
-            ylim: (-10.0,10.0),
+            new_parameter_name: "".to_owned(),
+            xlim: (-1.0,1.0),
+            //ylim: (-10.0,10.0),
             functions: vec![f1, f2],
             parameters_names: vec![],
-            parameters_values: vec![], //Function::new("sin(x)*sin(x)*a+b*cos(x)".to_owned(), "sin(x)*sin(x)*a+b*cos(x)".to_owned()),
+            parameters_values: vec![],
+            parameters_lim: vec![]
+             //Function::new("sin(x)*sin(x)*a+b*cos(x)".to_owned(), "sin(x)*sin(x)*a+b*cos(x)".to_owned()),
                                        // parameters_names:  Self::get_parameters_names_from_functions(vec![&f1.clone(),&f2.clone()])
         };
         out.update_parameters_names_from_functions();
@@ -218,7 +231,7 @@ impl eframe::App for MyApp {
                                         ui.add(
                                             egui::DragValue::new(&mut function.vars_values[i])
                                                 .speed(0.1)
-                                                .clamp_range(-10.0..=10.0)
+                                                .clamp_range(self.parameters_lim[i].0..=self.parameters_lim[i].1)
                                                 .prefix(format!("{}: ", name)),
                                         );
                                         //TODO:  should we this update the app vars?
@@ -231,14 +244,59 @@ impl eframe::App for MyApp {
                     });
                 }
                 //let idx = 0;
+                let mut param_id_to_remove = None;
                 for (i, param_name) in self.parameters_names.iter().enumerate() {
                     // let mut_values = &mut self.parameters_values.unwrap();
+                    let frame = egui::Frame::default()
+                        .inner_margin(4.0)
+                        .stroke(egui::Stroke::new(1.0, egui::Color32::GRAY)); // Black border
+                    frame.show(ui, |ui: &mut egui::Ui| {
+                        ui.horizontal(|ui| {
+
+                        if ui
+                                    .button("⊗")
+                                    .on_hover_text("Remove this parameter")
+                                    .clicked()
+                                {
+                                    param_id_to_remove = Some(i);
+                                }
                     ui.add(
                         egui::DragValue::new(&mut self.parameters_values[i])
                             .speed(0.1)
-                            .clamp_range(-10.0..=10.0)
+                            .clamp_range(self.parameters_lim[i].0..=self.parameters_lim[i].1)
                             .prefix(format!("{}: ", param_name)),
-                    );
+                    )});
+                    ui.vertical(|ui| {
+                    let id = ui.make_persistent_id(i+100);
+                    egui::CollapsingHeader::new("Parameters limits")
+                        .id_source(id)
+                        .show(ui, |ui| {
+                            // ui.push_id("a", |ui| {
+                            ui.horizontal(|ui| {
+                                ui.add(
+                                    egui::DragValue::new(&mut self.parameters_lim[i].0)
+                                        .speed(0.1)
+                                        .speed(0.1)
+                                        .clamp_range(f64::NEG_INFINITY..=f64::INFINITY)
+                                        //.suffix(format!("<")),
+                                );
+                                ui.label(format!("≤ {} ≤ ", self.parameters_names[i]));
+                                //ui.wrap_text()
+                                ui.add(
+                                    egui::DragValue::new(&mut self.parameters_lim[i].1)
+                                        .speed(0.1)
+                                        .clamp_range(f64::NEG_INFINITY..=f64::INFINITY)
+                                        //.suffix(format!("<")),
+                                        
+                                );
+        
+                                
+                            }
+
+                            )
+                        });
+                });
+                });
                     // for all the functions, modify the var name values
                     for function in self.functions.iter_mut() {
                         if function.vars_names.contains(param_name) {
@@ -254,7 +312,11 @@ impl eframe::App for MyApp {
                 if let Some(index) = id_to_remove {
                     self.functions.remove(index);
                 }
-
+                if let Some(index) = param_id_to_remove {
+                    self.parameters_names.remove(index);
+                    self.parameters_values.remove(index);
+                }
+                
                 ui.horizontal(|ui| {
                     if ui
                         .button("➕")
@@ -271,52 +333,54 @@ impl eframe::App for MyApp {
                     ui.text_edit_singleline(&mut self.new_function_name)
                         .labelled_by(label.id);
                 });
+                ui.horizontal(|ui| {
+                    // parameter
+                    if ui
+                        .button("➕")
+                        .on_hover_text("Add a new parameter")
+                        .clicked()
+                    {
+                        self.parameters_names.push(self.new_parameter_name.to_owned());
+                        self.parameters_values.push(DEFAULT_VALUE_PARAMETER);
+                        self.new_parameter_name = "".to_owned();
+                    };
+                    let label = ui.label("Param: ");
+                    ui.text_edit_singleline(&mut self.new_parameter_name)
+                        .labelled_by(label.id);
+                });
             });
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
             let plot = Plot::new("custom_axes")
                 .legend(Legend::default())
-                .show_axes(true);
+                .show_axes(true)
+                .view_aspect(1.0)
+                .auto_bounds(Vec2b::new(false, false))
+                .allow_double_click_reset(false);
 
-            //plot.show_axes(show)
-            // let x0 = plot.coordinates_pos
-            // Show the plot with lines
+
             plot.show(ui, |plot_ui| {
                 let plot_bounds = plot_ui.plot_bounds();
-                // self.xlim.0 = plot_bounds.min()[0];
-                // self.xlim.1= plot_bounds.max()[0];
-                let plot_bounds = plot_ui.plot_bounds();
-                println!("{:?}", plot_bounds);
-                //let p1 = plot_ui.pl
+                //plot_ui.set_plot_bounds(plot_bounds)
+                self.xlim.0 = plot_bounds.min()[0];
+                self.xlim.1 = plot_bounds.max()[0];
                 for function in &self.functions {
                     plot_ui.line(
                         Line::new(PlotPoints::from_parametric_callback(
                             |t| {
-                                //let expr = fun);
-                                // let f = element.assign_value_to_var("a", );
                                 let x = t;
                                 let y = function.eval(t);
                                 (x, y)
                             },
+                            // make the plot adaptative to reduce number of points for high resolution. We can use also from_explicit_callback but I can figure out the static requirements
                             self.xlim.0..=self.xlim.1,
                             500,
                         ))
                         .name(&function.name),
                     );
-                    //     Line::new(PlotPoints::from_explicit_callback(
-                    //         move |x| function.eval(x),
-                    //         ..,
-                    //         500,
-                    //     ))
-                    //     .name(&function.name),
-                    // );
                 }
 
-
-                //self.ylim.0 = plot_bounds.min()[1];
-                //self.ylim.1=plot_bounds.max()[1];
-                //println!("{:?}", plot_bounds);
             })
             .response
         });
