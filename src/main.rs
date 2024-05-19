@@ -38,6 +38,13 @@ impl Function {
             None => println!("Variable not found"),
         }
     }
+    pub fn reparse(&mut self){
+        self.parsed_expression = self.expression.parse().expect("Could not parse the expression");
+        let vars = Self::extract_vars(&self.parsed_expression);
+        self.vars_names = vars.0;
+        self.vars_values = vars.1;
+
+    } 
     pub fn eval(&self, x: f64) -> f64 {
         // if it is slow, look at mapping only one var x like in the example
         // Apparently the library uses bind2, bind3, depending on the number of variables, investigate bindn
@@ -138,12 +145,6 @@ struct MyApp {
 }
 impl MyApp {
     pub fn update_parameters_names_from_functions(&mut self) {
-        // let mut parameters_names: Vec<String> = vec![];
-        // let mut parameters_values: Vec<f64> = vec![];
-        // if additive {
-        //     parameters_names = self.parameters_names;
-        //     parameters_values = self.parameters_values;
-        // }
         let mut parameters_names = self.parameters_names.clone();
         let mut parameters_values = self.parameters_values.clone();
         let mut parameters_lim = self.parameters_lim.clone();
@@ -185,9 +186,7 @@ impl Default for MyApp {
             parameters_names: vec![],
             parameters_values: vec![],
             parameters_lim: vec![]
-             //Function::new("sin(x)*sin(x)*a+b*cos(x)".to_owned(), "sin(x)*sin(x)*a+b*cos(x)".to_owned()),
-                                       // parameters_names:  Self::get_parameters_names_from_functions(vec![&f1.clone(),&f2.clone()])
-        };
+            };
         out.update_parameters_names_from_functions();
         out
     }
@@ -195,7 +194,10 @@ impl Default for MyApp {
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        //let idx_function_to_re
         egui::SidePanel::left("my_left_panel").show(ctx, |ui| {
+            let mut is_update_app_necessary = false;
+            let mut show_parameter_name_warning: bool = false;
             ui.heading("Elements");
             ui.vertical(|ui| {
                 let mut id_to_remove = None;
@@ -218,15 +220,27 @@ impl eframe::App for MyApp {
                                     egui::TextEdit::singleline(&mut function.name)
                                         .desired_width(70.0),
                                 );
-                                // rename if clicked and typed
-                                //ui.text_edit_singleline(&mut element.name);
                             });
-                            // get id
+                            // get id to avoid collisions based on same name
                             let id = ui.make_persistent_id(i);
                             egui::CollapsingHeader::new("Parameters")
                                 .id_source(id)
                                 .show(ui, |ui| {
                                     // ui.push_id("a", |ui| {
+                                    // add edit of function
+                                    let modified_response = ui.add(
+                                        egui::TextEdit::singleline(&mut function.expression)
+                                            .desired_width(70.0),
+                                    );
+                                    if modified_response.clicked() {
+                                        // re-create function
+                                        function.reparse();
+                                        is_update_app_necessary=true;
+                                        //self.update_parameters_names_from_functions();
+
+                                        //self.functions[i] = Function::new(function.expression.to_owned(), function.name.to_owned())
+                                    }
+                                    
                                     for (i, name) in function.vars_names.iter().enumerate() {
                                         ui.add(
                                             egui::DragValue::new(&mut function.vars_values[i])
@@ -249,7 +263,7 @@ impl eframe::App for MyApp {
                     // let mut_values = &mut self.parameters_values.unwrap();
                     let frame = egui::Frame::default()
                         .inner_margin(4.0)
-                        .stroke(egui::Stroke::new(1.0, egui::Color32::GRAY)); // Black border
+                        .stroke(egui::Stroke::new(1.0, egui::Color32::BLUE)); // Black border
                     frame.show(ui, |ui: &mut egui::Ui| {
                         ui.horizontal(|ui| {
 
@@ -278,7 +292,6 @@ impl eframe::App for MyApp {
                                         .speed(0.1)
                                         .speed(0.1)
                                         .clamp_range(f64::NEG_INFINITY..=f64::INFINITY)
-                                        //.suffix(format!("<")),
                                 );
                                 ui.label(format!("≤ {} ≤ ", self.parameters_names[i]));
                                 //ui.wrap_text()
@@ -286,7 +299,6 @@ impl eframe::App for MyApp {
                                     egui::DragValue::new(&mut self.parameters_lim[i].1)
                                         .speed(0.1)
                                         .clamp_range(f64::NEG_INFINITY..=f64::INFINITY)
-                                        //.suffix(format!("<")),
                                         
                                 );
         
@@ -316,6 +328,9 @@ impl eframe::App for MyApp {
                     self.parameters_names.remove(index);
                     self.parameters_values.remove(index);
                 }
+                if is_update_app_necessary {
+                    self.update_parameters_names_from_functions();
+                }
                 
                 ui.horizontal(|ui| {
                     if ui
@@ -340,9 +355,22 @@ impl eframe::App for MyApp {
                         .on_hover_text("Add a new parameter")
                         .clicked()
                     {
-                        self.parameters_names.push(self.new_parameter_name.to_owned());
-                        self.parameters_values.push(DEFAULT_VALUE_PARAMETER);
-                        self.new_parameter_name = "".to_owned();
+                        if self.parameters_names.contains(&self.new_parameter_name) | show_parameter_name_warning{
+                            // TODO: warning only showing first time
+                            show_parameter_name_warning = true;
+                            ui.colored_label(egui::Color32::RED, format!("{} is already defined, choose another name.", &self.new_parameter_name));
+        
+                        } else {
+                            self.parameters_names.push(self.new_parameter_name.to_owned());
+                            self.parameters_values.push(DEFAULT_VALUE_PARAMETER);
+                            self.parameters_lim.push(DEFAULT_PARAMETERS_LIMIT);
+                            self.new_parameter_name = "".to_owned();
+                            show_parameter_name_warning = false;
+
+                        }
+
+    
+                        
                     };
                     let label = ui.label("Param: ");
                     ui.text_edit_singleline(&mut self.new_parameter_name)
