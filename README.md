@@ -9,3 +9,4 @@ Ideas:
 - [ ] Add reset button
 - [ ] Improve format, separate into functions
 - [ ] Handle errors without panicking
+- [ ] make it work with wasm and web (https://github.com/emilk/eframe_template/blob/main/src/main.rs)

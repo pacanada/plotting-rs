@@ -368,9 +368,6 @@ impl eframe::App for MyApp {
                             show_parameter_name_warning = false;
 
                         }
-
-    
-                        
                     };
                     let label = ui.label("Param: ");
                     ui.text_edit_singleline(&mut self.new_parameter_name)
