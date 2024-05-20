@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <!-- The WASM code will resize the canvas dynamically -->
+    <!-- the id is hardcoded in main.rs . so, make sure both match. -->
+    <canvas id="the_canvas_id"></canvas>
+<script type="module">
+    import init from './plotting-rs.js'
+    init()
+</script>
+</body>
+</html>

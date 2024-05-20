@@ -10,3 +10,18 @@ Ideas:
 - [ ] Improve format, separate into functions
 - [ ] Handle errors without panicking
 - [ ] make it work with wasm and web (https://github.com/emilk/eframe_template/blob/main/src/main.rs)
+
+
+# Run for web
+```cmd
+cargo build --release --target wasm32-unknown-unknown
+```
+```
+cargo install --locked trunk (only once)
+```
+```
+trunk serve
+```
+
+# known issue
+it cannot be displayed with the rest of the wasm apps in github pages
