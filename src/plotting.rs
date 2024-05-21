@@ -363,12 +363,14 @@ impl eframe::App for PlottingApp {
                 });
             });
         });
+        //let frame = egui::Frame::default().inner_margin(40.0).outer_margin(50.0);
 
         egui::CentralPanel::default().show(ctx, |ui| {
             let plot = Plot::new("custom_axes")
+                //.width(100.0)
                 .legend(Legend::default())
                 .show_axes(true)
-                .view_aspect(1.0)
+                //.view_aspect(1.0)
                 .auto_bounds(Vec2b::new(false, false))
                 .allow_double_click_reset(false);
 

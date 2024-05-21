@@ -3,17 +3,17 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 <!-- Disable zooming: -->
-<meta name="viewport" content="width=500, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=500, initial-scale=1.0, user-scalable=yes">
 
 <head>
     <!-- change this to your project name -->
-    <title>Plottinge</title>
+    <title>Plotting</title>
 
     <!-- config for our rust wasm binary. go to https://trunkrs.dev/assets/#rust for more customization -->
     
 <script type="module">
-import init, * as bindings from '/plotting-rs-aad14318bb73fdf4.js';
-const wasm = await init('/plotting-rs-aad14318bb73fdf4_bg.wasm');
+import init, * as bindings from '/plotting-rs-ed2047ea66314cdd.js';
+const wasm = await init('/plotting-rs-ed2047ea66314cdd_bg.wasm');
 
 
 window.wasmBindings = bindings;
@@ -123,8 +123,8 @@ dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
 
     </style>
 
-<link rel="modulepreload" href="/plotting-rs-aad14318bb73fdf4.js" crossorigin=anonymous integrity="sha384-5rePPy2F7i8p1zDU9qC2xCRUYB95yRSKysdULC7ci0RbFaKtBDEkUqZXwFBpMgLn">
-<link rel="preload" href="/plotting-rs-aad14318bb73fdf4_bg.wasm" crossorigin=anonymous integrity="sha384-+X+OL+snf3udyOVGdVNsVLVolxaWuqJp55Rfisnwj9gFlRGY35vT9N3WhZMV7ioD" as="fetch" type="application/wasm"></head>
+<link rel="modulepreload" href="/plotting-rs-ed2047ea66314cdd.js" crossorigin=anonymous integrity="sha384-+NWlxxYLkMOqI4eyzHeiGboSYESrnjzmvqu4tPgQtXDx3DQmca4IGrGozsE53o3n">
+<link rel="preload" href="/plotting-rs-ed2047ea66314cdd_bg.wasm" crossorigin=anonymous integrity="sha384-k59XmOSJtcKGnG6Z2uHMbmcP7Bs2dHRzt0J/ebSQOnPToRCpU5hdou2O3tjIeG7S" as="fetch" type="application/wasm"></head>
 
 <body>
     <!-- The WASM code will resize the canvas dynamically -->
