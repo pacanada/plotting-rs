@@ -30,3 +30,4 @@ trunk build --release (to save wasm artifacts to dist)
 # known issue
 - It cannot be displayed with the rest of the wasm apps in github pages
 - When building with `trunk`, the resulting `index.html` is generated with the relative path considering the page artifacts are in the root, but they are located in `/plotting-rs/`. For now is manually overwriten to fix the path.
+- With `wasm-bindgen`, the experience is awfull.
