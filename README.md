@@ -9,7 +9,9 @@ Ideas:
 - [ ] Add reset button
 - [ ] Improve format, separate into functions
 - [ ] Handle errors without panicking
-- [ ] make it work with wasm and web (https://github.com/emilk/eframe_template/blob/main/src/main.rs)
+- [X] make it work with wasm and web (https://github.com/emilk/eframe_template/blob/main/src/main.rs)
+- [X] Deploy in secondary github page
+- [ ] Streamline the process of generating the page and fix the plotting-rs/ path
 
 
 # Run for web
@@ -22,10 +24,10 @@ cargo install --locked trunk (only once)
 ```cmd
 trunk serve (for local developmet)
 ```
-
 ```cmd
 trunk build --release (to save wasm artifacts to dist)
 ```
+Fix the path in `dist/index.html` to be `/plotting-rs/` instead of `/`
 
 # known issue
 - It cannot be displayed with the rest of the wasm apps in github pages
