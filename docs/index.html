@@ -12,8 +12,8 @@
     <!-- config for our rust wasm binary. go to https://trunkrs.dev/assets/#rust for more customization -->
     
 <script type="module">
-import init, * as bindings from '/plotting-rs-d823b8a97b7dee10.js';
-const wasm = await init('/plotting-rs-d823b8a97b7dee10_bg.wasm');
+import init, * as bindings from '/plotting-rs/plotting-rs-d823b8a97b7dee10.js';
+const wasm = await init('/plotting-rs/plotting-rs-d823b8a97b7dee10_bg.wasm');
 
 
 window.wasmBindings = bindings;
@@ -23,7 +23,7 @@ dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
 
 </script>
     <!-- this is the base url relative to which other urls will be constructed. trunk will insert this from the public-url option -->
-    <base rel="/plotting-rs" href="/" />
+    <base href="/" />
 
 
 
@@ -123,8 +123,8 @@ dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
 
     </style>
 
-<link rel="modulepreload" href="/plotting-rs-d823b8a97b7dee10.js" crossorigin=anonymous integrity="sha384-KUkLgNlMHH9r/gXfQbRFLDsHjooE55FBQYc2JTSO7DtCXp4Ds5YAG8RW7EFe2r2d">
-<link rel="preload" href="/plotting-rs-d823b8a97b7dee10_bg.wasm" crossorigin=anonymous integrity="sha384-ZVtnBssguQ+GcCNmFr4yrqKP3yJmCv+iHts72sIuBNsdeqmwKgu8M3klzFpwpSXg" as="fetch" type="application/wasm"></head>
+<link rel="modulepreload" href="/plotting-rs/plotting-rs-d823b8a97b7dee10.js" crossorigin=anonymous integrity="sha384-KUkLgNlMHH9r/gXfQbRFLDsHjooE55FBQYc2JTSO7DtCXp4Ds5YAG8RW7EFe2r2d">
+<link rel="preload" href="/plotting-rs/plotting-rs-d823b8a97b7dee10_bg.wasm" crossorigin=anonymous integrity="sha384-ZVtnBssguQ+GcCNmFr4yrqKP3yJmCv+iHts72sIuBNsdeqmwKgu8M3klzFpwpSXg" as="fetch" type="application/wasm"></head>
 
 <body>
     <!-- The WASM code will resize the canvas dynamically -->
