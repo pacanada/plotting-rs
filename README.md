@@ -20,7 +20,11 @@ cargo build --release --target wasm32-unknown-unknown
 cargo install --locked trunk (only once)
 ```
 ```
-trunk serve
+trunk serve (for local developmet)
+```
+
+```
+trunk build --release (to save wasm artifacts to dist)
 ```
 
 # known issue
