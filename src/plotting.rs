@@ -162,13 +162,13 @@ impl PlottingApp {
 
 impl Default for PlottingApp {
     fn default() -> Self {
-        let f1 = Function::new("x^2+0.1*a".to_owned(), "x^2+0.1*a".to_owned());
-        let f2 = Function::new("x^a/c^4".to_owned(), "x^a/c^4".to_owned());
+        let f1 = Function::new("sin(x*a)*b".to_owned(), "f1".to_owned());
+        let f2 = Function::new("cos(x*a)/b".to_owned(), "f2".to_owned());
         // let parameters_names = Self::get_parameters_names_from_functions(functions)
         let mut out = Self {
             new_function_name: "".to_owned(),
             new_parameter_name: "".to_owned(),
-            xlim: (-1.0,1.0),
+            xlim: (-10.0,10.0),
             //ylim: (-10.0,10.0),
             functions: vec![f1, f2],
             parameters_names: vec![],
@@ -192,7 +192,7 @@ impl eframe::App for PlottingApp {
                 for (i, function) in self.functions.iter_mut().enumerate() {
                     let frame = egui::Frame::default()
                         .inner_margin(4.0)
-                        .stroke(egui::Stroke::new(1.0, egui::Color32::GRAY)); // Black border
+                        .stroke(egui::Stroke::new(1.0, egui::Color32::LIGHT_GRAY)); // Black border
                     frame.show(ui, |ui: &mut egui::Ui| {
                         ui.vertical(|ui| {
                             ui.horizontal(|ui| {
@@ -206,7 +206,7 @@ impl eframe::App for PlottingApp {
 
                                 ui.add(
                                     egui::TextEdit::singleline(&mut function.name)
-                                        .desired_width(70.0),
+                                        .desired_width(85.0),
                                 );
                             });
                             // get id to avoid collisions based on same name
@@ -216,9 +216,11 @@ impl eframe::App for PlottingApp {
                                 .show(ui, |ui| {
                                     // ui.push_id("a", |ui| {
                                     // add edit of function
+                                    ui.horizontal( |ui| {
+                                        ui.label("f(x) = ");
                                     let modified_response = ui.add(
                                         egui::TextEdit::singleline(&mut function.expression)
-                                            .desired_width(70.0),
+                                            .desired_width(100.0),
                                     );
                                     if modified_response.clicked() {
                                         // re-create function
@@ -228,6 +230,8 @@ impl eframe::App for PlottingApp {
 
                                         //self.functions[i] = Function::new(function.expression.to_owned(), function.name.to_owned())
                                     }
+                                });
+                                    
                                     
                                     for (i, name) in function.vars_names.iter().enumerate() {
                                         ui.add(
@@ -251,7 +255,7 @@ impl eframe::App for PlottingApp {
                     // let mut_values = &mut self.parameters_values.unwrap();
                     let frame = egui::Frame::default()
                         .inner_margin(4.0)
-                        .stroke(egui::Stroke::new(1.0, egui::Color32::BLUE)); // Black border
+                        .stroke(egui::Stroke::new(1.0, egui::Color32::LIGHT_BLUE)); // Black border
                     frame.show(ui, |ui: &mut egui::Ui| {
                         ui.horizontal(|ui| {
 
